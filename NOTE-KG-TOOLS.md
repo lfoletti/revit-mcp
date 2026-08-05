@@ -41,6 +41,21 @@ Migration du serveur MCP `revit` de l'hôte `poc-baseline/server` vers cet hôte
 `commandRegistry.json` référence déjà les 16 commandes `kg_*` → `RevitMCPCommandSet.KG.dll` ;
 DLLs (`BimKg.Core/Runtime` + cset) déployées sous `…/Addins/2025/revit_mcp_plugin/Commands/`.
 
+## Installation — `install.ps1` (le repo EST le pack)
+
+Cloner ce repo puis : `powershell -ExecutionPolicy Bypass -File .\install.ps1`. Idempotent,
+rejouable, sauvegarde avant chaque écriture. Fait les 3 étapes qui ne sont PAS de simples copies :
+1. **build** node (`tsc` ; prépend le dossier node au PATH pour le cycle `prebuild/clean`) ;
+2. **registry** — fusionne les 16 commandes `kg_*` dans le `commandRegistry.json` **central** du plugin,
+   lues **depuis** le `command.json` du cset KG déployé (upsert par `commandName`, pas de liste en dur) ;
+   saute proprement si le cset n'est pas déployé (→ `DeployCommandSet` du repo B) ;
+3. **config** — repointe `~/.claude.json` serveur `revit` → `server/build/index.js` de ce repo
+   (remplacement chirurgical, formatage préservé ; NOOP si déjà bon).
+
+Params : `-RevitVersion -AddinsRoot -ClaudeConfig -ServerName -NodeExe -SkipBuild -SkipRegistry -SkipConfig`.
+Les `.ts` (`kg/`, `kg_*`, `revit_execute`) sont déjà dans le repo — rien à copier. Les DLLs du cset
+restent du ressort du repo B. Redémarrer Claude Code après pour charger le build.
+
 ## Config MCP
 
 `~/.claude.json`, serveur `revit` : `poc-baseline\server\build\index.js`
